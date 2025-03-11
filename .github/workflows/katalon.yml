@@ -1,0 +1,44 @@
+name: Run Katalon Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  katalon:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+
+      - name: Install Xvfb
+        run: sudo apt-get install -y xvfb
+
+      - name: Install Katalon
+        run: |
+          mkdir -p katalon
+          wget https://download.katalon.com/8.6.9/Katalon_Studio_Engine_Linux_64-8.6.9.tar.gz -O katalon-studio-linux-64.tar.gz
+          tar -xzf katalon-studio-linux-64.tar.gz -C katalon
+
+      - name: Verify download
+        run: |
+          file katalon-studio-linux-64.tar.gz
+
+      - name: Run Katalon Studio
+        env:
+          KATALON_API_KEY: 6199616f-c09c-45aa-863a-1d4cbc7713dc
+        run: |
+          Xvfb :99 -screen 0 1024x768x24 &
+          export DISPLAY=:99
+          katalon/Katalon_Studio_Engine_Linux_64-8.6.9/katalonc -noSplash -runMode=console -projectPath="$GITHUB_WORKSPACE/katalon_studio/D_assessment" -retry=0 -testSuitePath="Test Suites/assessment_suite" -executionProfile="default" -browserType="Chrome" -apiKey=$KATALON_API_KEY
+        continue-on-error: true
